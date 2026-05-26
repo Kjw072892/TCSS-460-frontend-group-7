@@ -29,7 +29,6 @@ interface Props {
   destination?: string;
   compact?: boolean;
   signInCallbackUrl?: string;
-  signedInLabel?: string;
 }
 
 export default function SearchForm({
@@ -41,7 +40,6 @@ export default function SearchForm({
   destination = "/search",
   compact = false,
   signInCallbackUrl,
-  signedInLabel,
 }: Props) {
   const router = useRouter();
   const [q, setQ] = useState(initialQ);
@@ -52,6 +50,8 @@ export default function SearchForm({
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
 
   const hasCriteria = includeMovies || includeTV;
+  const canSearch =
+    hasCriteria && Boolean(q.trim()) && Boolean(genreId.trim());
   const open = Boolean(anchorEl);
   const activeFilterCount = useMemo(() => {
     let count = 0;
@@ -61,16 +61,20 @@ export default function SearchForm({
     return count;
   }, [genreId, includeMovies, includeTV, year]);
 
-  function handleSubmit(e: React.SyntheticEvent<HTMLFormElement>) {
-    e.preventDefault();
-    if (!q.trim() || !hasCriteria) return;
-
-    const params = new URLSearchParams({ q: q.trim(), page: "1" });
+  function runSearch() {
+    if (!canSearch) return;
+    const params = new URLSearchParams({ page: "1" });
+    if (q.trim()) params.set("q", q.trim());
     if (includeMovies) params.set("movies", "1");
     if (includeTV) params.set("tv", "1");
     if (year.trim()) params.set("year", year.trim());
     if (genreId.trim()) params.set("genreId", genreId.trim());
     router.push(`${destination}?${params}`);
+  }
+
+  function handleSubmit(e: React.SyntheticEvent<HTMLFormElement>) {
+    e.preventDefault();
+    runSearch();
   }
 
   function resetFilters() {
@@ -140,7 +144,7 @@ export default function SearchForm({
         type="submit"
         variant="contained"
         startIcon={<SearchIcon />}
-        disabled={!q.trim() || !hasCriteria}
+        disabled={!canSearch}
         sx={{
           whiteSpace: "nowrap",
           width: { xs: compact ? "calc(50% - 4px)" : "auto", sm: "auto" },
@@ -149,17 +153,7 @@ export default function SearchForm({
         Search
       </Button>
 
-      {signedInLabel && (
-        <Typography
-          variant="body2"
-          color="text.secondary"
-          sx={{ whiteSpace: "nowrap", fontWeight: 500 }}
-        >
-          {signedInLabel}
-        </Typography>
-      )}
-
-      {!signedInLabel && signInCallbackUrl && (
+      {signInCallbackUrl && (
         <HomeSignInButton callbackUrl={signInCallbackUrl} />
       )}
 
@@ -169,7 +163,7 @@ export default function SearchForm({
           color="text.secondary"
           sx={{ width: "100%" }}
         >
-          Search by title, then refine by media type, year, or genre.
+          Search by title or use the filters to browse by media type, year, or genre.
         </Typography>
       )}
 
@@ -247,7 +241,7 @@ export default function SearchForm({
             select
             label="Genre"
             value={genreId}
-            onChange={(e) => setGenreId(e.target.value)}
+            onChange={(e) => setGenreId(String(e.target.value))}
             size="small"
           >
             <MenuItem value="">Any genre</MenuItem>
@@ -267,7 +261,10 @@ export default function SearchForm({
             <Button
               type="button"
               variant="contained"
-              onClick={() => setAnchorEl(null)}
+              onClick={() => {
+                setAnchorEl(null);
+                runSearch();
+              }}
             >
               Apply
             </Button>

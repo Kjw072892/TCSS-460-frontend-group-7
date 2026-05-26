@@ -39,6 +39,7 @@ export default async function SearchPage({ searchParams }: PageProps) {
   const includeTV =
     tv !== "0" && tv !== "false" && (tv === "1" || movies !== "1");
   const hasCriteria = includeMovies || includeTV;
+  const hasSearchInput = Boolean(q?.trim()) || Boolean(year.trim()) || Boolean(genreId.trim());
 
   // ── Search results (when query present) ──────────────────────────────────
   type CombinedResult =
@@ -49,14 +50,14 @@ export default async function SearchPage({ searchParams }: PageProps) {
   let totalResults = 0;
   let searchError: string | null = null;
 
-  if (q) {
+  if (hasSearchInput) {
     try {
       const [moviesData, tvData] = await Promise.allSettled([
         includeMovies
-          ? searchMovies(q, { page: pageNum, year, genreId })
+          ? searchMovies(q?.trim() ?? "", { page: pageNum, year, genreId })
           : Promise.resolve(null),
         includeTV
-          ? searchTV(q, { page: pageNum, year, genreId })
+          ? searchTV(q?.trim() ?? "", { page: pageNum, year, genreId })
           : Promise.resolve(null),
       ]);
 
@@ -125,12 +126,11 @@ export default async function SearchPage({ searchParams }: PageProps) {
               Search
             </Typography>
             <SearchForm
-              initialQ={q}
+              initialQ={q ?? ""}
               initialMovies={includeMovies}
               initialTV={includeTV}
               initialYear={year}
               initialGenreId={genreId}
-              signedInLabel={user?.name || user?.email || undefined}
               signInCallbackUrl={!user ? APP_CONFIG.routes.search : undefined}
             />
           </Box>
@@ -138,7 +138,7 @@ export default async function SearchPage({ searchParams }: PageProps) {
           <Divider />
 
           {/* ── Search results ── */}
-          {q && (
+          {hasSearchInput && (
             <>
               {searchError ? (
                 <Typography color="error">{searchError}</Typography>
@@ -146,8 +146,8 @@ export default async function SearchPage({ searchParams }: PageProps) {
                 <>
                   <Typography color="text.secondary">
                     {totalResults.toLocaleString()} result
-                    {totalResults !== 1 ? "s" : ""} for &ldquo;
-                    {q}&rdquo;
+                    {totalResults !== 1 ? "s" : ""}
+                    {q?.trim() ? ` for “${q.trim()}”` : " for your filters"}
                   </Typography>
 
                   {results.length === 0 ? (
@@ -178,7 +178,7 @@ export default async function SearchPage({ searchParams }: PageProps) {
 
                   {totalPages > 1 && (
                     <SearchPagination
-                      q={q}
+                      q={q ?? ""}
                       page={pageNum}
                       totalPages={totalPages}
                       includeMovies={includeMovies}

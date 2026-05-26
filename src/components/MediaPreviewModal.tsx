@@ -19,6 +19,7 @@ import PersonIcon from "@mui/icons-material/Person";
 
 import { MovieDetail, TVShowDetail } from "@/types/backendObjects";
 import { getMovieById, getTVShowById } from "@/lib/fetchAPI";
+import { enrichedMovie, enrichedTV } from "@/lib/media-api";
 
 interface MediaPreviewModalProps {
   mediaId: number | null;
@@ -32,12 +33,14 @@ export default function MediaPreviewModal({
   onClose,
 }: MediaPreviewModalProps) {
   const [detail, setDetail] = useState<MovieDetail | TVShowDetail | null>(null);
+  const [communityRating, setCommunityRating] = useState<number | null>(null);
   const [loadingDetail, setLoadingDetail] = useState(false);
   const isOpen = mediaId !== null;
 
   useEffect(() => {
     if (mediaId == null) {
       setDetail(null);
+      setCommunityRating(null);
       setLoadingDetail(false);
       return;
     }
@@ -48,18 +51,24 @@ export default function MediaPreviewModal({
     async function loadDetail() {
       setLoadingDetail(true);
       try {
-        const result =
+        const [result, enrichedResult] = await Promise.all([
           mediaType === "movie"
-            ? await getMovieById(resolvedMediaId)
-            : await getTVShowById(resolvedMediaId);
+            ? getMovieById(resolvedMediaId)
+            : getTVShowById(resolvedMediaId),
+          mediaType === "movie"
+            ? enrichedMovie(resolvedMediaId)
+            : enrichedTV(resolvedMediaId),
+        ]);
 
         if (!cancelled) {
           setDetail(result);
+          setCommunityRating(enrichedResult.community.averageRating);
         }
       } catch (err) {
         if (!cancelled) {
           console.error(err);
           setDetail(null);
+          setCommunityRating(null);
         }
       } finally {
         if (!cancelled) {
@@ -179,6 +188,16 @@ export default function MediaPreviewModal({
                     <Chip
                       label={`TMDB ${detail.rating.toFixed(2)}/10`}
                       color="primary"
+                      size="small"
+                      variant="outlined"
+                    />
+                    <Chip
+                      label={
+                        communityRating == null
+                          ? "Members No Rating"
+                          : `Members ${communityRating.toFixed(2)}/10`
+                      }
+                      color="secondary"
                       size="small"
                       variant="outlined"
                     />
