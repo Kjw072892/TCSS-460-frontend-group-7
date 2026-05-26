@@ -11,9 +11,10 @@ import MovieIcon from "@mui/icons-material/Movie";
 import HomeSignInButton from "@/components/HomeSignInButton";
 import MediaCarousel from "@/components/CarouselTemplate";
 import SearchForm from "@/components/SearchForm";
-import GenreRow, { groupByGenre } from "@/components/GenreRow";
+import GenreRow from "@/components/GenreRow";
 import UserAccountMenu from "@/components/UserAccountMenu";
 import { getPopularMovies, getPopularTVShows } from "@/lib/fetchAPI";
+import { groupByGenre, type GenreMediaItem } from "@/lib/group-media-by-genre";
 import { popularMoviesMultiPage, popularTVMultiPage } from "@/lib/media-api";
 import { auth } from "@/lib/auth";
 import { APP_CONFIG } from "@/config";
@@ -29,10 +30,7 @@ export default async function HomePage() {
 
   let movies: MovieCard[] = [];
   let tvShows: TVShowCard[] = [];
-  let genreRows: [
-    string,
-    ReturnType<typeof groupByGenre> extends Map<string, infer V> ? V : never,
-  ][] = [];
+  let genreRows: [string, GenreMediaItem[]][] = [];
   let browseError = false;
   try {
     const [movieRes, tvRes, browseMovies, browseTV] = await Promise.all([
