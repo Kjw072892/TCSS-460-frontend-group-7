@@ -42,9 +42,9 @@ export default function MediaCarousel({
   const preventClickRef = useRef(false);
   const offsetRef = useRef(0);
   const centerCandidateIndexRef = useRef<number | null>(null);
-  const centerHighlightTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
-    null,
-  );
+  const centerHighlightTimeoutRef = useRef<ReturnType<
+    typeof setTimeout
+  > | null>(null);
 
   const itemCount = items.length;
   const cardWidth = 180;
@@ -87,6 +87,26 @@ export default function MediaCarousel({
     setHighlightedId(items[0]?.id ?? null);
     centerCandidateIndexRef.current = null;
   }, [items]);
+
+  useEffect(() => {
+    if (isPreviewOpen) {
+      return;
+    }
+
+    isWheelScrollingRef.current = false;
+    snapPendingRef.current = true;
+    hoverCenterIndexRef.current = null;
+    hoverLockPointerRef.current = null;
+    touchDragStartXRef.current = null;
+    touchDragLastXRef.current = null;
+    touchDraggingRef.current = false;
+    preventClickRef.current = false;
+
+    if (wheelStopTimeoutRef.current) {
+      clearTimeout(wheelStopTimeoutRef.current);
+      wheelStopTimeoutRef.current = null;
+    }
+  }, [isPreviewOpen]);
 
   useEffect(() => {
     const animate = () => {
@@ -157,31 +177,28 @@ export default function MediaCarousel({
 
       if (!isPreviewOpen && itemCount > 0) {
         const currentOffset = offsetRef.current;
-        const nearestIndex = items.reduce(
-          (closestIndex, _item, index) => {
-            let x = index * spacing + currentOffset;
+        const nearestIndex = items.reduce((closestIndex, _item, index) => {
+          let x = index * spacing + currentOffset;
 
-            if (infinite && totalWidth > 0) {
-              x = x % totalWidth;
-              if (x > totalWidth / 2) x -= totalWidth;
-              if (x < -totalWidth / 2) x += totalWidth;
-            }
+          if (infinite && totalWidth > 0) {
+            x = x % totalWidth;
+            if (x > totalWidth / 2) x -= totalWidth;
+            if (x < -totalWidth / 2) x += totalWidth;
+          }
 
-            if (closestIndex === -1) {
-              return index;
-            }
+          if (closestIndex === -1) {
+            return index;
+          }
 
-            let closestX = closestIndex * spacing + currentOffset;
-            if (infinite && totalWidth > 0) {
-              closestX = closestX % totalWidth;
-              if (closestX > totalWidth / 2) closestX -= totalWidth;
-              if (closestX < -totalWidth / 2) closestX += totalWidth;
-            }
+          let closestX = closestIndex * spacing + currentOffset;
+          if (infinite && totalWidth > 0) {
+            closestX = closestX % totalWidth;
+            if (closestX > totalWidth / 2) closestX -= totalWidth;
+            if (closestX < -totalWidth / 2) closestX += totalWidth;
+          }
 
-            return Math.abs(x) < Math.abs(closestX) ? index : closestIndex;
-          },
-          -1,
-        );
+          return Math.abs(x) < Math.abs(closestX) ? index : closestIndex;
+        }, -1);
 
         if (nearestIndex !== centerCandidateIndexRef.current) {
           centerCandidateIndexRef.current = nearestIndex;
@@ -210,7 +227,15 @@ export default function MediaCarousel({
       if (centerHighlightTimeoutRef.current)
         clearTimeout(centerHighlightTimeoutRef.current);
     };
-  }, [infinite, isPreviewOpen, itemCount, items, normalizeOffset, spacing, totalWidth]);
+  }, [
+    infinite,
+    isPreviewOpen,
+    itemCount,
+    items,
+    normalizeOffset,
+    spacing,
+    totalWidth,
+  ]);
 
   const handleMouseMove = (e: React.MouseEvent) => {
     if (isPreviewOpen) return;
