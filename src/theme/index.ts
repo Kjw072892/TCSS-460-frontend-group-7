@@ -61,17 +61,35 @@ export const defaultTheme = createTheme({
   components: {
     MuiCssBaseline: {
       styleOverrides: {
+        html: {
+          scrollbarColor: "#F5C518 #121212",
+        },
         body: {
-          scrollbarColor: "#3a3a3a #121212",
-          "&::-webkit-scrollbar": { width: "8px" },
-          "&::-webkit-scrollbar-track": { background: "#121212" },
-          "&::-webkit-scrollbar-thumb": { backgroundColor: "#3a3a3a", borderRadius: "4px" },
-          "&::-webkit-scrollbar-thumb:hover": { backgroundColor: "#555555" },
+          scrollbarColor: "#F5C518 #121212",
+          "&::-webkit-scrollbar": { width: "10px" },
+          "&::-webkit-scrollbar-track": {
+            background: "#121212",
+            boxShadow: "inset 0 0 0 1px #2c2c2c",
+          },
+          "&::-webkit-scrollbar-thumb": {
+            background:
+              "linear-gradient(180deg, #f7d155 0%, #F5C518 55%, #c9a000 100%)",
+            borderRadius: "999px",
+            border: "2px solid #121212",
+          },
+          "&::-webkit-scrollbar-thumb:hover": {
+            background:
+              "linear-gradient(180deg, #ffe07a 0%, #F5C518 55%, #d4ab00 100%)",
+          },
         },
         a: { color: "inherit", textDecoration: "none" },
       },
     },
     MuiButton: { styleOverrides: { root: { borderRadius: 8 } } },
-    MuiCard: { styleOverrides: { root: { borderRadius: 12, boxShadow: "0 2px 8px rgba(0,0,0,0.4)" } } },
+    MuiCard: {
+      styleOverrides: {
+        root: { borderRadius: 12, boxShadow: "0 2px 8px rgba(0,0,0,0.4)" },
+      },
+    },
   },
 });

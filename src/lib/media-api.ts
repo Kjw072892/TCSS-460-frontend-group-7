@@ -1,19 +1,49 @@
-import { apiGet } from './api';
-import type { MovieSummary, TVSummary, PagedResponse, EnrichedMovie, EnrichedTV } from '@/types/media';
+import { apiGet } from "./api";
+import type {
+  MovieSummary,
+  TVSummary,
+  PagedResponse,
+  EnrichedMovie,
+  EnrichedTV,
+} from "@/types/media";
 
-export function searchMovies(title: string, page = 1): Promise<PagedResponse<MovieSummary>> {
+interface SearchOptions {
+  page?: number;
+  year?: string;
+  genreId?: string;
+}
+
+function buildSearchParams(
+  title: string,
+  { page = 1, year, genreId }: SearchOptions,
+) {
   const params = new URLSearchParams({ title, page: String(page) });
+  if (year?.trim()) params.set("year", year.trim());
+  if (genreId?.trim()) params.set("genreId", genreId.trim());
+  return params;
+}
+
+export function searchMovies(
+  title: string,
+  options: SearchOptions = {},
+): Promise<PagedResponse<MovieSummary>> {
+  const params = buildSearchParams(title, options);
   return apiGet<PagedResponse<MovieSummary>>(`/v1/media/movies?${params}`);
 }
 
-export function searchTV(title: string, page = 1): Promise<PagedResponse<TVSummary>> {
-  const params = new URLSearchParams({ title, page: String(page) });
+export function searchTV(
+  title: string,
+  options: SearchOptions = {},
+): Promise<PagedResponse<TVSummary>> {
+  const params = buildSearchParams(title, options);
   return apiGet<PagedResponse<TVSummary>>(`/v1/media/tv?${params}`);
 }
 
 export function popularMovies(page = 1): Promise<PagedResponse<MovieSummary>> {
   const params = new URLSearchParams({ page: String(page) });
-  return apiGet<PagedResponse<MovieSummary>>(`/v1/media/movies/popular?${params}`);
+  return apiGet<PagedResponse<MovieSummary>>(
+    `/v1/media/movies/popular?${params}`,
+  );
 }
 
 export function popularTV(page = 1): Promise<PagedResponse<TVSummary>> {
@@ -21,11 +51,18 @@ export function popularTV(page = 1): Promise<PagedResponse<TVSummary>> {
   return apiGet<PagedResponse<TVSummary>>(`/v1/media/tv/popular?${params}`);
 }
 
-export async function popularMoviesMultiPage(pages = 4): Promise<MovieSummary[]> {
-  const requests = Array.from({ length: pages }, (_, i) => popularMovies(i + 1));
+export async function popularMoviesMultiPage(
+  pages = 4,
+): Promise<MovieSummary[]> {
+  const requests = Array.from({ length: pages }, (_, i) =>
+    popularMovies(i + 1),
+  );
   const results = await Promise.allSettled(requests);
   return results
-    .filter((r): r is PromiseFulfilledResult<PagedResponse<MovieSummary>> => r.status === 'fulfilled')
+    .filter(
+      (r): r is PromiseFulfilledResult<PagedResponse<MovieSummary>> =>
+        r.status === "fulfilled",
+    )
     .flatMap((r) => r.value.results);
 }
 
@@ -33,7 +70,10 @@ export async function popularTVMultiPage(pages = 4): Promise<TVSummary[]> {
   const requests = Array.from({ length: pages }, (_, i) => popularTV(i + 1));
   const results = await Promise.allSettled(requests);
   return results
-    .filter((r): r is PromiseFulfilledResult<PagedResponse<TVSummary>> => r.status === 'fulfilled')
+    .filter(
+      (r): r is PromiseFulfilledResult<PagedResponse<TVSummary>> =>
+        r.status === "fulfilled",
+    )
     .flatMap((r) => r.value.results);
 }
 

@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import {
   AppBar,
@@ -9,20 +9,20 @@ import {
   Toolbar,
   Tooltip,
   Typography,
-} from '@mui/material';
-import EmailIcon from '@mui/icons-material/Email';
-import SendIcon from '@mui/icons-material/Send';
-import BugReportIcon from '@mui/icons-material/BugReport';
-import PersonIcon from '@mui/icons-material/Person';
-import SearchIcon from '@mui/icons-material/Search';
-import Link from 'next/link';
-import { useSession } from 'next-auth/react';
-import type { ReactNode } from 'react';
+} from "@mui/material";
+import EmailIcon from "@mui/icons-material/Email";
+import SendIcon from "@mui/icons-material/Send";
+import BugReportIcon from "@mui/icons-material/BugReport";
+import PersonIcon from "@mui/icons-material/Person";
+import SearchIcon from "@mui/icons-material/Search";
+import Link from "next/link";
+import { useSession } from "next-auth/react";
+import type { ReactNode } from "react";
 
-import Logo from '@/components/Logo';
-import SignInButton from '@/components/SignInButton';
-import SignOutButton from '@/components/SignOutButton';
-import { APP_CONFIG } from '@/config';
+import Logo from "@/components/Logo";
+import SignInButton from "@/components/SignInButton";
+import SignOutButton from "@/components/SignOutButton";
+import { APP_CONFIG } from "@/config";
 
 /**
  * App shell rendered by the `(dashboard)` route group: top AppBar with
@@ -32,37 +32,33 @@ import { APP_CONFIG } from '@/config';
  */
 export default function DashboardShell({ children }: { children: ReactNode }) {
   const { data: session, status } = useSession();
-  const signedIn = status === 'authenticated';
+  const signedIn = status === "authenticated";
 
   return (
     <section>
       <AppBar
         position="static"
-        sx={{ bgcolor: '#000000', borderBottom: '1px solid #2c2c2c' }}
+        sx={{ bgcolor: "#000000", borderBottom: "1px solid #2c2c2c" }}
       >
         <Toolbar>
-          <Box sx={{ flexGrow: 1, display: 'flex', alignItems: 'center' }}>
+          <Box sx={{ flexGrow: 1, display: "flex", alignItems: "center" }}>
             <Tooltip title="Dashboard">
               <Box
                 component={Link}
                 href={APP_CONFIG.routes.dashboard}
                 sx={{
-                  display: 'flex',
-                  alignItems: 'center',
+                  display: "flex",
+                  alignItems: "center",
                   gap: 1.5,
-                  color: 'inherit',
-                  textDecoration: 'none',
+                  color: "inherit",
+                  textDecoration: "none",
                 }}
               >
-                <Logo
-                  variant="full"
-                  width={35}
-                  height={35}
-                />
+                <Logo variant="full" width={35} height={35} />
                 <Typography
                   variant="h6"
                   component="div"
-                  sx={{ display: { xs: 'none', sm: 'block' } }}
+                  sx={{ display: { xs: "none", sm: "block" } }}
                 >
                   {APP_CONFIG.app.title}
                 </Typography>
@@ -72,8 +68,8 @@ export default function DashboardShell({ children }: { children: ReactNode }) {
 
           <Box
             sx={{
-              display: { xs: 'none', sm: 'flex' },
-              alignItems: 'center',
+              display: { xs: "none", sm: "flex" },
+              alignItems: "center",
               gap: 1,
             }}
           >
@@ -135,27 +131,24 @@ export default function DashboardShell({ children }: { children: ReactNode }) {
             <Divider
               orientation="vertical"
               flexItem
-              sx={{ bgcolor: 'white', mx: 1 }}
+              sx={{ bgcolor: "white", mx: 1 }}
             />
 
-            {status === 'loading' && (
-              <CircularProgress
-                size={20}
-                color="inherit"
-              />
+            {status === "loading" && (
+              <CircularProgress size={20} color="inherit" />
             )}
-            {status !== 'loading' && signedIn && (
+            {status !== "loading" && signedIn && (
               <>
                 <Typography
                   variant="body2"
-                  sx={{ display: { xs: 'none', md: 'block' } }}
+                  sx={{ display: { xs: "none", md: "block" } }}
                 >
-                  {session?.user?.email ?? session?.user?.name ?? 'Signed in'}
+                  {session?.user?.email ?? session?.user?.name ?? "Signed in"}
                 </Typography>
                 <SignOutButton />
               </>
             )}
-            {status !== 'loading' && !signedIn && <SignInButton />}
+            {status !== "loading" && !signedIn && <SignInButton />}
           </Box>
         </Toolbar>
       </AppBar>

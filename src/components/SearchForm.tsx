@@ -1,48 +1,262 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { Box, Button, TextField } from '@mui/material';
-import SearchIcon from '@mui/icons-material/Search';
+import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+import {
+  Box,
+  Button,
+  Checkbox,
+  Divider,
+  FormControlLabel,
+  FormGroup,
+  MenuItem,
+  Popover,
+  TextField,
+  Typography,
+} from "@mui/material";
+import SearchIcon from "@mui/icons-material/Search";
+import TuneIcon from "@mui/icons-material/Tune";
+
+import HomeSignInButton from "@/components/HomeSignInButton";
+import { MEDIA_GENRES, getGenreNameById } from "@/lib/media-filters";
 
 interface Props {
   initialQ?: string;
+  initialMovies?: boolean;
+  initialTV?: boolean;
+  initialYear?: string;
+  initialGenreId?: string;
+  destination?: string;
+  compact?: boolean;
+  signInCallbackUrl?: string;
+  signedInLabel?: string;
 }
 
-export default function SearchForm({ initialQ = '' }: Props) {
+export default function SearchForm({
+  initialQ = "",
+  initialMovies = true,
+  initialTV = true,
+  initialYear = "",
+  initialGenreId = "",
+  destination = "/search",
+  compact = false,
+  signInCallbackUrl,
+  signedInLabel,
+}: Props) {
   const router = useRouter();
   const [q, setQ] = useState(initialQ);
+  const [includeMovies, setIncludeMovies] = useState(initialMovies);
+  const [includeTV, setIncludeTV] = useState(initialTV);
+  const [year, setYear] = useState(initialYear);
+  const [genreId, setGenreId] = useState(initialGenreId);
+  const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
+
+  const hasCriteria = includeMovies || includeTV;
+  const open = Boolean(anchorEl);
+  const activeFilterCount = useMemo(() => {
+    let count = 0;
+    if (year.trim()) count += 1;
+    if (genreId.trim()) count += 1;
+    if (!includeMovies || !includeTV) count += 1;
+    return count;
+  }, [genreId, includeMovies, includeTV, year]);
 
   function handleSubmit(e: React.SyntheticEvent<HTMLFormElement>) {
     e.preventDefault();
-    if (!q.trim()) return;
-    const params = new URLSearchParams({ q: q.trim(), page: '1' });
-    router.push(`/search?${params}`);
+    if (!q.trim() || !hasCriteria) return;
+
+    const params = new URLSearchParams({ q: q.trim(), page: "1" });
+    if (includeMovies) params.set("movies", "1");
+    if (includeTV) params.set("tv", "1");
+    if (year.trim()) params.set("year", year.trim());
+    if (genreId.trim()) params.set("genreId", genreId.trim());
+    router.push(`${destination}?${params}`);
   }
+
+  function resetFilters() {
+    setIncludeMovies(true);
+    setIncludeTV(true);
+    setYear("");
+    setGenreId("");
+  }
+
+  const filterSummary = [
+    !includeMovies || !includeTV
+      ? includeMovies && includeTV
+        ? "Movies + TV"
+        : includeMovies
+          ? "Movies only"
+          : includeTV
+            ? "TV only"
+            : "No media type selected"
+      : null,
+    year.trim() ? `Year ${year.trim()}` : null,
+    genreId.trim()
+      ? getGenreNameById(Number(genreId)) || `Genre ${genreId.trim()}`
+      : null,
+  ]
+    .filter(Boolean)
+    .join(" • ");
 
   return (
     <Box
       component="form"
       onSubmit={handleSubmit}
-      sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', alignItems: 'center' }}
+      sx={{
+        display: "flex",
+        gap: compact ? 1 : 2,
+        flexWrap: "wrap",
+        alignItems: "center",
+        width: compact ? "100%" : "auto",
+      }}
     >
       <TextField
-        label="Search movies & TV shows"
+        label="Search"
         value={q}
         onChange={(e) => setQ(e.target.value)}
         variant="outlined"
         size="small"
-        sx={{ flexGrow: 1, minWidth: 240 }}
-        autoFocus
+        sx={{ flexGrow: 1, minWidth: compact ? 520 : 260 }}
+        autoFocus={!compact}
       />
+
+      <Button
+        type="button"
+        variant="outlined"
+        startIcon={<TuneIcon />}
+        onClick={(e) => setAnchorEl(e.currentTarget)}
+        sx={{ whiteSpace: "nowrap" }}
+      >
+        Filters{activeFilterCount > 0 ? ` (${activeFilterCount})` : ""}
+      </Button>
+
       <Button
         type="submit"
         variant="contained"
         startIcon={<SearchIcon />}
-        disabled={!q.trim()}
+        disabled={!q.trim() || !hasCriteria}
+        sx={{ whiteSpace: "nowrap" }}
       >
         Search
       </Button>
+
+      {signedInLabel && (
+        <Typography
+          variant="body2"
+          color="text.secondary"
+          sx={{ whiteSpace: "nowrap", fontWeight: 500 }}
+        >
+          {signedInLabel}
+        </Typography>
+      )}
+
+      {!signedInLabel && signInCallbackUrl && (
+        <HomeSignInButton callbackUrl={signInCallbackUrl} />
+      )}
+
+      {!compact && (
+        <Typography
+          variant="caption"
+          color="text.secondary"
+          sx={{ width: "100%" }}
+        >
+          Search by title, then refine by media type, year, or genre.
+        </Typography>
+      )}
+
+      {!!filterSummary && (
+        <Typography
+          variant="caption"
+          color="text.secondary"
+          sx={{ width: "100%" }}
+        >
+          Active filters: {filterSummary}
+        </Typography>
+      )}
+
+      <Popover
+        open={open}
+        anchorEl={anchorEl}
+        onClose={() => setAnchorEl(null)}
+        anchorOrigin={{ vertical: "bottom", horizontal: "left" }}
+        transformOrigin={{ vertical: "top", horizontal: "left" }}
+      >
+        <Box sx={{ width: 320, p: 2, display: "grid", gap: 2 }}>
+          <Typography variant="subtitle1" fontWeight="bold">
+            Refine Search
+          </Typography>
+
+          <FormGroup>
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={includeMovies}
+                  onChange={(e) => setIncludeMovies(e.target.checked)}
+                />
+              }
+              label="Search movies"
+            />
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={includeTV}
+                  onChange={(e) => setIncludeTV(e.target.checked)}
+                />
+              }
+              label="Search TV shows"
+            />
+          </FormGroup>
+
+          {!hasCriteria && (
+            <Typography variant="caption" color="warning.main">
+              Select at least one media type.
+            </Typography>
+          )}
+
+          <Divider />
+
+          <TextField
+            label="Release / Air Year"
+            value={year}
+            onChange={(e) =>
+              setYear(e.target.value.replace(/[^\d]/g, "").slice(0, 4))
+            }
+            size="small"
+            placeholder="e.g. 2024"
+            inputMode="numeric"
+          />
+
+          <TextField
+            select
+            label="Genre"
+            value={genreId}
+            onChange={(e) => setGenreId(e.target.value)}
+            size="small"
+          >
+            <MenuItem value="">Any genre</MenuItem>
+            {MEDIA_GENRES.map((genre) => (
+              <MenuItem key={genre.id} value={String(genre.id)}>
+                {genre.name}
+              </MenuItem>
+            ))}
+          </TextField>
+
+          <Box
+            sx={{ display: "flex", justifyContent: "space-between", gap: 1 }}
+          >
+            <Button type="button" onClick={resetFilters}>
+              Reset
+            </Button>
+            <Button
+              type="button"
+              variant="contained"
+              onClick={() => setAnchorEl(null)}
+            >
+              Apply
+            </Button>
+          </Box>
+        </Box>
+      </Popover>
     </Box>
   );
 }

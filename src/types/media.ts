@@ -1,4 +1,4 @@
-export type MediaType = 'movie' | 'tv';
+export type MediaType = "movie" | "tv";
 
 export interface CastMember {
   name: string;
@@ -28,7 +28,12 @@ export interface Season {
 export interface Community {
   averageRating: number | null;
   reviewCount: number;
-  recentReviews: Array<{ id: number; title: string; body: string; author?: string }>;
+  recentReviews: Array<{
+    id: number;
+    title: string;
+    body: string;
+    author?: string;
+  }>;
 }
 
 export interface MovieDetail {

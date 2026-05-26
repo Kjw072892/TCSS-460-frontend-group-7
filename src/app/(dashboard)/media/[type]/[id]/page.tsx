@@ -1,4 +1,4 @@
-import { notFound } from 'next/navigation';
+import { notFound } from "next/navigation";
 import {
   Avatar,
   Box,
@@ -7,14 +7,21 @@ import {
   Divider,
   Stack,
   Typography,
-} from '@mui/material';
-import StarIcon from '@mui/icons-material/Star';
-import LockIcon from '@mui/icons-material/Lock';
+} from "@mui/material";
+import StarIcon from "@mui/icons-material/Star";
+import LockIcon from "@mui/icons-material/Lock";
 
-import { enrichedMovie, enrichedTV } from '@/lib/media-api';
-import { ApiError } from '@/lib/api';
-import HorizontalScroller from '@/components/HorizontalScroller';
-import type { CastMember, MovieDetail, TVDetail, Community, SimilarTitle } from '@/types/media';
+import AppNavBar from "@/components/AppNavBar";
+import { enrichedMovie, enrichedTV } from "@/lib/media-api";
+import { ApiError } from "@/lib/api";
+import HorizontalScroller from "@/components/HorizontalScroller";
+import type {
+  CastMember,
+  MovieDetail,
+  TVDetail,
+  Community,
+  SimilarTitle,
+} from "@/types/media";
 
 interface PageProps {
   params: Promise<{ type: string; id: string }>;
@@ -23,13 +30,13 @@ interface PageProps {
 export default async function MediaDetailPage({ params }: PageProps) {
   const { type, id } = await params;
 
-  if (type !== 'movie' && type !== 'tv') notFound();
+  if (type !== "movie" && type !== "tv") notFound();
 
   let tmdb: MovieDetail | TVDetail;
   let community: Community;
 
   try {
-    if (type === 'movie') {
+    if (type === "movie") {
       const data = await enrichedMovie(id);
       tmdb = data.tmdb;
       community = data.community;
@@ -43,8 +50,8 @@ export default async function MediaDetailPage({ params }: PageProps) {
     throw e;
   }
 
-  const movieDetail = type === 'movie' ? (tmdb as MovieDetail) : null;
-  const tvDetail = type === 'tv' ? (tmdb as TVDetail) : null;
+  const movieDetail = type === "movie" ? (tmdb as MovieDetail) : null;
+  const tvDetail = type === "tv" ? (tmdb as TVDetail) : null;
 
   const year =
     movieDetail?.releaseYear?.toString() ??
@@ -53,20 +60,47 @@ export default async function MediaDetailPage({ params }: PageProps) {
 
   const meta: string[] = [];
   if (year) meta.push(year);
-  if (movieDetail?.runtimeMinutes) meta.push(`${movieDetail.runtimeMinutes} min`);
-  if (tvDetail?.totalSeasons) meta.push(`${tvDetail.totalSeasons} season${tvDetail.totalSeasons !== 1 ? 's' : ''}`);
+  if (movieDetail?.runtimeMinutes)
+    meta.push(`${movieDetail.runtimeMinutes} min`);
+  if (tvDetail?.totalSeasons)
+    meta.push(
+      `${tvDetail.totalSeasons} season${tvDetail.totalSeasons !== 1 ? "s" : ""}`,
+    );
   if (tvDetail?.totalEpisodes) meta.push(`${tvDetail.totalEpisodes} episodes`);
   if (tmdb.status) meta.push(tmdb.status);
 
   return (
     <Box>
+      <AppNavBar callbackUrl={`/media/${type}/${id}`} />
       {/* ── Backdrop ── */}
       <Box
         sx={{
-          position: 'relative',
-          height: { xs: 220, md: 420 },
-          overflow: 'hidden',
-          bgcolor: 'background.paper',
+          position: "relative",
+          height: { xs: 240, md: 520 },
+          overflow: "hidden",
+          bgcolor: "background.paper",
+          ...(tmdb.backdropUrl
+            ? {
+                "&::before": {
+                  content: '""',
+                  position: "absolute",
+                  inset: 0,
+                  backgroundImage: `url(${tmdb.backdropUrl})`,
+                  backgroundSize: "cover",
+                  backgroundPosition: "center",
+                  filter: "blur(28px)",
+                  transform: "scale(1.08)",
+                  opacity: 0.28,
+                },
+                "&::after": {
+                  content: '""',
+                  position: "absolute",
+                  inset: 0,
+                  background:
+                    "linear-gradient(to right, rgba(18,18,18,0.88) 0%, rgba(18,18,18,0.18) 14%, rgba(18,18,18,0.18) 86%, rgba(18,18,18,0.88) 100%), linear-gradient(to bottom, rgba(18,18,18,0.08) 0%, rgba(18,18,18,0.62) 100%)",
+                },
+              }
+            : {}),
         }}
       >
         {tmdb.backdropUrl && (
@@ -75,38 +109,42 @@ export default async function MediaDetailPage({ params }: PageProps) {
             src={tmdb.backdropUrl}
             alt=""
             sx={{
-              width: '100%',
-              height: '100%',
-              objectFit: 'cover',
-              opacity: 0.45,
-              maskImage: 'linear-gradient(to bottom, black 40%, transparent 100%)',
-              WebkitMaskImage: 'linear-gradient(to bottom, black 40%, transparent 100%)',
+              width: "100%",
+              height: "100%",
+              objectFit: "contain",
+              objectPosition: "center",
+              position: "relative",
+              zIndex: 1,
+              opacity: 0.82,
             }}
           />
         )}
       </Box>
 
-      <Container maxWidth="lg" sx={{ mt: -10, position: 'relative', pb: 6 }}>
+      <Container
+        maxWidth="lg"
+        sx={{ mt: 0, pt: { xs: 3, md: 4 }, position: "relative", pb: 6 }}
+      >
         <Stack spacing={5}>
           {/* ── Hero ── */}
           <Box
             sx={{
-              display: 'flex',
+              display: "flex",
               gap: { xs: 2, md: 4 },
-              flexDirection: { xs: 'column', sm: 'row' },
-              alignItems: { xs: 'center', sm: 'flex-end' },
+              flexDirection: { xs: "column", sm: "row" },
+              alignItems: { xs: "center", sm: "flex-end" },
             }}
           >
             {/* Poster */}
             <Box
               component="img"
-              src={tmdb.posterUrl ?? '/poster-placeholder.png'}
+              src={tmdb.posterUrl ?? "/poster-placeholder.png"}
               alt={tmdb.title}
               sx={{
                 width: { xs: 140, md: 200 },
                 flexShrink: 0,
                 borderRadius: 2,
-                boxShadow: '0 8px 32px rgba(0,0,0,0.6)',
+                boxShadow: "0 8px 32px rgba(0,0,0,0.6)",
               }}
             />
 
@@ -116,7 +154,7 @@ export default async function MediaDetailPage({ params }: PageProps) {
                 {tmdb.title}
               </Typography>
 
-              {'tagline' in tmdb && tmdb.tagline && (
+              {"tagline" in tmdb && tmdb.tagline && (
                 <Typography
                   variant="subtitle1"
                   color="text.secondary"
@@ -128,26 +166,29 @@ export default async function MediaDetailPage({ params }: PageProps) {
               )}
 
               <Typography variant="body2" color="text.secondary" gutterBottom>
-                {meta.join(' · ')}
+                {meta.join(" · ")}
               </Typography>
 
-              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.75, mt: 1 }}>
+              <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.75, mt: 1 }}>
                 {tmdb.genres.map((g) => (
                   <Chip key={g.id} label={g.name ?? g.id} size="small" />
                 ))}
               </Box>
 
               {/* Community rating */}
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 2 }}>
-                <StarIcon sx={{ color: 'primary.main' }} />
+              <Box
+                sx={{ display: "flex", alignItems: "center", gap: 1, mt: 2 }}
+              >
+                <StarIcon sx={{ color: "primary.main" }} />
                 <Typography fontWeight="bold" fontSize="1.1rem">
                   {community.averageRating != null
                     ? community.averageRating.toFixed(1)
-                    : 'No ratings yet'}
+                    : "No ratings yet"}
                 </Typography>
                 {community.reviewCount > 0 && (
                   <Typography variant="body2" color="text.secondary">
-                    ({community.reviewCount} review{community.reviewCount !== 1 ? 's' : ''})
+                    ({community.reviewCount} review
+                    {community.reviewCount !== 1 ? "s" : ""})
                   </Typography>
                 )}
               </Box>
@@ -156,10 +197,10 @@ export default async function MediaDetailPage({ params }: PageProps) {
               <Box
                 sx={{
                   mt: 1.5,
-                  display: 'inline-flex',
-                  alignItems: 'center',
+                  display: "inline-flex",
+                  alignItems: "center",
                   gap: 0.75,
-                  color: 'text.disabled',
+                  color: "text.disabled",
                 }}
               >
                 <LockIcon fontSize="small" />
@@ -168,7 +209,14 @@ export default async function MediaDetailPage({ params }: PageProps) {
 
               {/* Networks */}
               {tvDetail?.networks && tvDetail.networks.length > 0 && (
-                <Box sx={{ display: 'flex', gap: 1.5, mt: 2, alignItems: 'center' }}>
+                <Box
+                  sx={{
+                    display: "flex",
+                    gap: 1.5,
+                    mt: 2,
+                    alignItems: "center",
+                  }}
+                >
                   {tvDetail.networks.map((n) =>
                     n.logoUrl ? (
                       <Box
@@ -176,10 +224,19 @@ export default async function MediaDetailPage({ params }: PageProps) {
                         component="img"
                         src={n.logoUrl}
                         alt={n.name}
-                        sx={{ height: 24, objectFit: 'contain', filter: 'brightness(0) invert(1)', opacity: 0.7 }}
+                        sx={{
+                          height: 24,
+                          objectFit: "contain",
+                          filter: "brightness(0) invert(1)",
+                          opacity: 0.7,
+                        }}
                       />
                     ) : (
-                      <Typography key={n.name} variant="caption" color="text.secondary">
+                      <Typography
+                        key={n.name}
+                        variant="caption"
+                        color="text.secondary"
+                      >
                         {n.name}
                       </Typography>
                     ),
@@ -193,10 +250,19 @@ export default async function MediaDetailPage({ params }: PageProps) {
 
           {/* ── Overview ── */}
           <Box>
-            <Typography variant="h6" fontWeight="bold" gutterBottom color="primary.main">
+            <Typography
+              variant="h6"
+              fontWeight="bold"
+              gutterBottom
+              color="primary.main"
+            >
               Overview
             </Typography>
-            <Typography variant="body1" color="text.secondary" sx={{ lineHeight: 1.8 }}>
+            <Typography
+              variant="body1"
+              color="text.secondary"
+              sx={{ lineHeight: 1.8 }}
+            >
               {tmdb.overview}
             </Typography>
           </Box>
@@ -206,28 +272,47 @@ export default async function MediaDetailPage({ params }: PageProps) {
           {/* ── Cast ── */}
           {tmdb.cast && tmdb.cast.length > 0 && (
             <Box>
-              <Typography variant="h6" fontWeight="bold" gutterBottom color="primary.main">
+              <Typography
+                variant="h6"
+                fontWeight="bold"
+                gutterBottom
+                color="primary.main"
+              >
                 Cast
               </Typography>
-              <HorizontalScroller>
+              <HorizontalScroller infinite={tmdb.cast.length >= 10}>
                 {tmdb.cast.map((member: CastMember) => (
                   <Box
                     key={`${member.name}-${member.character}`}
-                    sx={{ minWidth: 90, maxWidth: 90, textAlign: 'center', flexShrink: 0 }}
+                    sx={{
+                      minWidth: 90,
+                      maxWidth: 90,
+                      textAlign: "center",
+                      flexShrink: 0,
+                    }}
                   >
                     <Avatar
                       src={member.profileUrl ?? undefined}
                       alt={member.name}
-                      sx={{ width: 72, height: 72, mx: 'auto', mb: 0.75 }}
+                      sx={{ width: 72, height: 72, mx: "auto", mb: 0.75 }}
                     />
-                    <Typography variant="caption" fontWeight="bold" display="block" noWrap>
+                    <Typography
+                      variant="caption"
+                      fontWeight="bold"
+                      display="block"
+                      noWrap
+                    >
                       {member.name}
                     </Typography>
                     <Typography
                       variant="caption"
                       color="text.secondary"
                       display="block"
-                      sx={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+                      sx={{
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
+                      }}
                     >
                       {member.character}
                     </Typography>
@@ -242,28 +327,52 @@ export default async function MediaDetailPage({ params }: PageProps) {
             <>
               <Divider />
               <Box>
-                <Typography variant="h6" fontWeight="bold" gutterBottom color="primary.main">
+                <Typography
+                  variant="h6"
+                  fontWeight="bold"
+                  gutterBottom
+                  color="primary.main"
+                >
                   More Like This
                 </Typography>
-                <HorizontalScroller>
+                <HorizontalScroller infinite={tmdb.similar.length >= 10}>
                   {tmdb.similar.map((s: SimilarTitle) => (
                     <Box
                       key={s.id}
                       component="a"
                       href={`/media/${type}/${s.id}`}
-                      sx={{ minWidth: 120, maxWidth: 120, flexShrink: 0, textDecoration: 'none' }}
+                      sx={{
+                        minWidth: 120,
+                        maxWidth: 120,
+                        flexShrink: 0,
+                        textDecoration: "none",
+                      }}
                     >
                       <Box
                         component="img"
-                        src={s.posterUrl ?? '/poster-placeholder.png'}
+                        src={s.posterUrl ?? "/poster-placeholder.png"}
                         alt={s.title}
-                        sx={{ width: '100%', aspectRatio: '2/3', objectFit: 'cover', borderRadius: 1 }}
+                        sx={{
+                          width: "100%",
+                          aspectRatio: "2/3",
+                          objectFit: "cover",
+                          borderRadius: 1,
+                        }}
                       />
-                      <Typography variant="caption" display="block" noWrap mt={0.5}>
+                      <Typography
+                        variant="caption"
+                        display="block"
+                        noWrap
+                        mt={0.5}
+                      >
                         {s.title}
                       </Typography>
                       {s.releaseYear && (
-                        <Typography variant="caption" color="text.secondary" display="block">
+                        <Typography
+                          variant="caption"
+                          color="text.secondary"
+                          display="block"
+                        >
                           {s.releaseYear}
                         </Typography>
                       )}
@@ -279,13 +388,29 @@ export default async function MediaDetailPage({ params }: PageProps) {
             <>
               <Divider />
               <Box>
-                <Typography variant="h6" fontWeight="bold" gutterBottom color="primary.main">
+                <Typography
+                  variant="h6"
+                  fontWeight="bold"
+                  gutterBottom
+                  color="primary.main"
+                >
                   Recent Reviews
                 </Typography>
                 <Stack spacing={2}>
                   {community.recentReviews.map((r) => (
-                    <Box key={r.id} sx={{ bgcolor: 'background.paper', borderRadius: 2, p: 2 }}>
-                      <Typography variant="subtitle2" fontWeight="bold" gutterBottom>
+                    <Box
+                      key={r.id}
+                      sx={{
+                        bgcolor: "background.paper",
+                        borderRadius: 2,
+                        p: 2,
+                      }}
+                    >
+                      <Typography
+                        variant="subtitle2"
+                        fontWeight="bold"
+                        gutterBottom
+                      >
                         {r.title}
                       </Typography>
                       <Typography variant="body2" color="text.secondary">

@@ -13,7 +13,7 @@ export const APP_CONFIG = {
   },
 
   app: {
-    title: "IMDBv0",
+    title: "7MDB",
     description: "Explore popular movies and TV shows",
   },
 

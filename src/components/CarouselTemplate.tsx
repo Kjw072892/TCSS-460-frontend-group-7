@@ -1,19 +1,39 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from "react";
-import { Box, Typography, Modal, Backdrop, Fade, IconButton, Stack, Chip, Divider,} from "@mui/material";
+import React, { useState, useRef, useEffect, useCallback } from "react";
+import Image from "next/image";
+import Link from "next/link";
+import {
+  Box,
+  Typography,
+  Modal,
+  Backdrop,
+  Fade,
+  IconButton,
+  Stack,
+  Chip,
+  Divider,
+  Button,
+} from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
-import { MovieCard, MovieDetail, TVShowCard, TVShowDetail, } from "@/types/backendObjects";
+import {
+  MovieCard,
+  MovieDetail,
+  TVShowCard,
+  TVShowDetail,
+} from "@/types/backendObjects";
 import { getMovieById, getTVShowById } from "@/lib/fetchAPI";
 
 interface MediaCarouselProps {
   items: (MovieCard | TVShowCard)[];
   mediaType: "movie" | "tv";
+  infinite?: boolean;
 }
 
 export default function MediaCarousel({
   items,
   mediaType,
+  infinite = true,
 }: MediaCarouselProps) {
   const [offset, setOffset] = useState(0);
   const [selectedId, setSelectedId] = useState<number | null>(null);
@@ -23,22 +43,106 @@ export default function MediaCarousel({
   const carouselRef = useRef<HTMLDivElement>(null);
   const mousePos = useRef({ x: 0, width: 0 });
   const requestRef = useRef<number>(null);
+  const snapPendingRef = useRef(false);
+  const wasEdgeScrollingRef = useRef(false);
+  const wheelStopTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
+  const isWheelScrollingRef = useRef(false);
+  const hoverCenterIndexRef = useRef<number | null>(null);
 
   const itemCount = items.length;
   const cardWidth = 180;
   const spacing = 220;
   const totalWidth = itemCount * spacing;
+  const minOffset = -(Math.max(itemCount - 1, 0) * spacing);
+
+  const normalizeOffset = useCallback(
+    (value: number) => {
+      if (!infinite || totalWidth <= 0) {
+        return Math.min(0, Math.max(minOffset, value));
+      }
+
+      return value % totalWidth;
+    },
+    [infinite, minOffset, totalWidth],
+  );
+
+  useEffect(() => {
+    const updateBounds = () => {
+      if (!carouselRef.current) return;
+      const { width } = carouselRef.current.getBoundingClientRect();
+      mousePos.current = {
+        width,
+        x: width / 2,
+      };
+    };
+
+    updateBounds();
+    window.addEventListener("resize", updateBounds);
+    return () => window.removeEventListener("resize", updateBounds);
+  }, []);
 
   useEffect(() => {
     const animate = () => {
-      const centerX = mousePos.current.width / 2;
-      const mouseOffset = mousePos.current.x - centerX;
-      const threshold = mousePos.current.width * 0.1;
-
-      if (Math.abs(mouseOffset) > threshold) {
-        const speed = (mouseOffset / centerX) * 15;
-        setOffset((prev) => (prev - speed) % totalWidth);
+      const { width } = mousePos.current;
+      if (!width) {
+        requestRef.current = requestAnimationFrame(animate);
+        return;
       }
+
+      const isEdgeScrolling = false;
+
+      if (isEdgeScrolling) {
+        snapPendingRef.current = false;
+        hoverCenterIndexRef.current = null;
+      } else if (wasEdgeScrollingRef.current) {
+        snapPendingRef.current = true;
+      }
+
+      if (
+        !isEdgeScrolling &&
+        !isWheelScrollingRef.current &&
+        hoverCenterIndexRef.current != null &&
+        totalWidth > 0
+      ) {
+        setOffset((prev) => {
+          const baseTarget = -hoverCenterIndexRef.current! * spacing;
+          const target = infinite
+            ? [
+                baseTarget - totalWidth,
+                baseTarget,
+                baseTarget + totalWidth,
+              ].reduce((closest, candidate) =>
+                Math.abs(candidate - prev) < Math.abs(closest - prev)
+                  ? candidate
+                  : closest,
+              )
+            : normalizeOffset(baseTarget);
+          const delta = target - prev;
+
+          if (Math.abs(delta) < 0.5) {
+            return target;
+          }
+
+          return prev + delta * 0.35;
+        });
+      } else if (!isEdgeScrolling && snapPendingRef.current && totalWidth > 0) {
+        setOffset((prev) => {
+          const nearestIndex = Math.round(prev / spacing);
+          const snapped = nearestIndex * spacing;
+          const delta = snapped - prev;
+
+          if (Math.abs(delta) < 0.5) {
+            snapPendingRef.current = false;
+            return snapped;
+          }
+
+          return prev + delta * 0.14;
+        });
+      }
+
+      wasEdgeScrollingRef.current = isEdgeScrolling;
 
       requestRef.current = requestAnimationFrame(animate);
     };
@@ -46,8 +150,10 @@ export default function MediaCarousel({
     requestRef.current = requestAnimationFrame(animate);
     return () => {
       if (requestRef.current) cancelAnimationFrame(requestRef.current);
+      if (wheelStopTimeoutRef.current)
+        clearTimeout(wheelStopTimeoutRef.current);
     };
-  }, [totalWidth]);
+  }, [infinite, normalizeOffset, spacing, totalWidth]);
 
   const handleMouseMove = (e: React.MouseEvent) => {
     if (carouselRef.current) {
@@ -61,12 +167,31 @@ export default function MediaCarousel({
 
   const handleMouseLeave = () => {
     if (carouselRef.current) {
-      // Reset x to center to stop rotation
+      const { width } = carouselRef.current.getBoundingClientRect();
       mousePos.current = {
-        ...mousePos.current,
-        x: mousePos.current.width / 2,
+        width,
+        x: width / 2,
       };
+      snapPendingRef.current = true;
+      hoverCenterIndexRef.current = null;
     }
+  };
+
+  const handleWheel = (e: React.WheelEvent) => {
+    const horizontalIntent = Math.abs(e.deltaX) > Math.abs(e.deltaY);
+    if (!horizontalIntent) return;
+
+    e.preventDefault();
+    snapPendingRef.current = false;
+    hoverCenterIndexRef.current = null;
+    isWheelScrollingRef.current = true;
+    setOffset((prev) => normalizeOffset(prev - e.deltaX));
+
+    if (wheelStopTimeoutRef.current) clearTimeout(wheelStopTimeoutRef.current);
+    wheelStopTimeoutRef.current = setTimeout(() => {
+      isWheelScrollingRef.current = false;
+      snapPendingRef.current = true;
+    }, 80);
   };
 
   const handleItemClick = async (id: number) => {
@@ -95,6 +220,7 @@ export default function MediaCarousel({
       ref={carouselRef}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
+      onWheel={handleWheel}
       sx={{
         width: "100%",
         height: "420px", // Reduced height
@@ -116,20 +242,36 @@ export default function MediaCarousel({
       >
         {items.map((item, index) => {
           // Calculate horizontal position with wrapping
-          let x = (index * spacing + offset) % totalWidth;
+          let x = index * spacing + offset;
 
-          // Center the wrapping window around 0
-          if (x > totalWidth / 2) x -= totalWidth;
-          if (x < -totalWidth / 2) x += totalWidth;
+          if (infinite && totalWidth > 0) {
+            x = x % totalWidth;
+
+            // Center the wrapping window around 0
+            if (x > totalWidth / 2) x -= totalWidth;
+            if (x < -totalWidth / 2) x += totalWidth;
+          }
 
           // Subtle scale effect for cards near the center
           const distanceFromCenter = Math.abs(x);
           const scale = Math.max(0.8, 1.1 - distanceFromCenter / 1000);
+          const centerProximity = Math.max(0, 1 - distanceFromCenter / 900);
+          const imageBrightness = 0.62 + centerProximity * 0.55;
+          const overlayOpacity = 0.68 - centerProximity * 0.4;
 
           return (
             <Box
               key={item.id}
               onClick={() => handleItemClick(item.id)}
+              onMouseEnter={() => {
+                if (
+                  !isWheelScrollingRef.current &&
+                  !wasEdgeScrollingRef.current
+                ) {
+                  snapPendingRef.current = false;
+                  hoverCenterIndexRef.current = index;
+                }
+              }}
               sx={{
                 position: "absolute",
                 width: `${cardWidth}px`,
@@ -148,20 +290,36 @@ export default function MediaCarousel({
                 "&:hover": {
                   boxShadow: "0 0 20px #F5C518", // Yellow glow on hover
                   zIndex: 1000,
-                  "& .media-info": {
-                    bgcolor: "rgba(0,0,0,0.85)",
+                  "& .poster-image": {
+                    transform: "scale(1.05)",
                   },
                 },
               }}
             >
-              <img
-                src={
-                  item.posterUrl ||
-                  "https://via.placeholder.com/200x300?text=No+Poster"
-                }
-                alt={item.title}
-                style={{ width: "100%", height: "100%", objectFit: "cover" }}
-              />
+              <Box
+                className="poster-image"
+                sx={{
+                  position: "relative",
+                  width: "100%",
+                  height: "100%",
+                  transformOrigin: "center",
+                  transition: "transform 0.25s ease",
+                }}
+              >
+                <Image
+                  src={
+                    item.posterUrl ||
+                    "https://via.placeholder.com/200x300?text=No+Poster"
+                  }
+                  alt={item.title}
+                  fill
+                  sizes="180px"
+                  style={{
+                    objectFit: "cover",
+                    filter: `brightness(${imageBrightness})`,
+                  }}
+                />
+              </Box>
               <Box
                 className="media-info"
                 sx={{
@@ -173,7 +331,7 @@ export default function MediaCarousel({
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  background: "rgba(0,0,0,0.6)",
+                  background: `rgba(0,0,0,${overlayOpacity})`,
                   color: "#F5C518", // Yellow text
                   p: 2,
                   textAlign: "center",
@@ -364,6 +522,19 @@ export default function MediaCarousel({
                         </Box>
                       ))}
                     </Stack>
+
+                    <Divider sx={{ my: 2 }} />
+
+                    <Button
+                      component={Link}
+                      href={`/media/${mediaType}/${detail.id}`}
+                      variant="outlined"
+                      color="primary"
+                      onClick={handleClose}
+                      sx={{ mt: 1 }}
+                    >
+                      View Full Details
+                    </Button>
                   </Box>
                 </Box>
               )
