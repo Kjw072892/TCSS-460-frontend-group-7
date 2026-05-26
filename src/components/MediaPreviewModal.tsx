@@ -33,6 +33,7 @@ export default function MediaPreviewModal({
 }: MediaPreviewModalProps) {
   const [detail, setDetail] = useState<MovieDetail | TVShowDetail | null>(null);
   const [loadingDetail, setLoadingDetail] = useState(false);
+  const isOpen = mediaId !== null;
 
   useEffect(() => {
     if (mediaId == null) {
@@ -74,9 +75,36 @@ export default function MediaPreviewModal({
     };
   }, [mediaId, mediaType]);
 
+  useEffect(() => {
+    if (!isOpen) {
+      return;
+    }
+
+    const scrollY = window.scrollY;
+    const originalBodyStyles = {
+      overflow: document.body.style.overflow,
+      position: document.body.style.position,
+      top: document.body.style.top,
+      width: document.body.style.width,
+    };
+
+    document.body.style.overflow = "hidden";
+    document.body.style.position = "fixed";
+    document.body.style.top = `-${scrollY}px`;
+    document.body.style.width = "100%";
+
+    return () => {
+      document.body.style.overflow = originalBodyStyles.overflow;
+      document.body.style.position = originalBodyStyles.position;
+      document.body.style.top = originalBodyStyles.top;
+      document.body.style.width = originalBodyStyles.width;
+      window.scrollTo(0, scrollY);
+    };
+  }, [isOpen]);
+
   return (
     <Modal
-      open={mediaId !== null}
+      open={isOpen}
       onClose={onClose}
       closeAfterTransition
       slots={{ backdrop: Backdrop }}
@@ -86,7 +114,7 @@ export default function MediaPreviewModal({
         },
       }}
     >
-      <Fade in={mediaId !== null}>
+      <Fade in={isOpen}>
         <Box
           sx={{
             position: "absolute",
