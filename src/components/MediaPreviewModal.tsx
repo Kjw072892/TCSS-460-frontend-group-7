@@ -16,10 +16,7 @@ import {
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 
-import {
-  MovieDetail,
-  TVShowDetail,
-} from "@/types/backendObjects";
+import { MovieDetail, TVShowDetail } from "@/types/backendObjects";
 import { getMovieById, getTVShowById } from "@/lib/fetchAPI";
 
 interface MediaPreviewModalProps {
@@ -168,7 +165,11 @@ export default function MediaPreviewModal({
                 </Box>
 
                 <Box sx={{ p: 3 }}>
-                  <Stack direction="row" spacing={1} sx={{ mb: 2, flexWrap: "wrap", rowGap: 1 }}>
+                  <Stack
+                    direction="row"
+                    spacing={1}
+                    sx={{ mb: 2, flexWrap: "wrap", rowGap: 1 }}
+                  >
                     {detail.genres.map((g) => (
                       <Chip key={g.id} label={g.name} size="small" />
                     ))}
@@ -187,21 +188,30 @@ export default function MediaPreviewModal({
                     {detail.overview}
                   </Typography>
 
-                  {mediaType === "movie" &&
-                    (detail as MovieDetail).tagline && (
-                      <Typography variant="body2" sx={{ fontStyle: "italic", mb: 2 }}>
-                        &ldquo;{(detail as MovieDetail).tagline}&rdquo;
-                      </Typography>
-                    )}
+                  {mediaType === "movie" && (detail as MovieDetail).tagline && (
+                    <Typography
+                      variant="body2"
+                      sx={{ fontStyle: "italic", mb: 2 }}
+                    >
+                      &ldquo;{(detail as MovieDetail).tagline}&rdquo;
+                    </Typography>
+                  )}
 
                   <Divider sx={{ my: 2 }} />
 
                   <Typography variant="h6" gutterBottom>
                     Cast
                   </Typography>
-                  <Stack direction="row" spacing={2} sx={{ overflowX: "auto", pb: 1 }}>
+                  <Stack
+                    direction="row"
+                    spacing={2}
+                    sx={{ overflowX: "auto", pb: 1 }}
+                  >
                     {detail.cast.slice(0, 5).map((member, idx) => (
-                      <Box key={idx} sx={{ minWidth: "100px", textAlign: "center" }}>
+                      <Box
+                        key={idx}
+                        sx={{ minWidth: "100px", textAlign: "center" }}
+                      >
                         <Box
                           component="img"
                           src={
