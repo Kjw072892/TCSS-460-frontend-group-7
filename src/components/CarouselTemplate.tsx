@@ -19,6 +19,7 @@ export default function MediaCarousel({
 }: MediaCarouselProps) {
   const [offset, setOffset] = useState(0);
   const [selectedId, setSelectedId] = useState<number | null>(null);
+  const isPreviewOpen = selectedId !== null;
 
   const carouselRef = useRef<HTMLDivElement>(null);
   const mousePos = useRef({ x: 0, width: 0 });
@@ -88,6 +89,7 @@ export default function MediaCarousel({
       }
 
       if (
+        !isPreviewOpen &&
         !isEdgeScrolling &&
         !isWheelScrollingRef.current &&
         hoverCenterIndexRef.current != null &&
@@ -114,7 +116,12 @@ export default function MediaCarousel({
 
           return prev + delta * 0.18;
         });
-      } else if (!isEdgeScrolling && snapPendingRef.current && totalWidth > 0) {
+      } else if (
+        !isPreviewOpen &&
+        !isEdgeScrolling &&
+        snapPendingRef.current &&
+        totalWidth > 0
+      ) {
         setOffset((prev) => {
           const nearestIndex = Math.round(prev / spacing);
           const snapped = nearestIndex * spacing;
@@ -140,9 +147,11 @@ export default function MediaCarousel({
       if (wheelStopTimeoutRef.current)
         clearTimeout(wheelStopTimeoutRef.current);
     };
-  }, [infinite, normalizeOffset, spacing, totalWidth]);
+  }, [infinite, isPreviewOpen, normalizeOffset, spacing, totalWidth]);
 
   const handleMouseMove = (e: React.MouseEvent) => {
+    if (isPreviewOpen) return;
+
     pointerClientPosRef.current = { x: e.clientX, y: e.clientY };
 
     if (carouselRef.current) {
@@ -155,6 +164,8 @@ export default function MediaCarousel({
   };
 
   const handleMouseLeave = () => {
+    if (isPreviewOpen) return;
+
     if (carouselRef.current) {
       const { width } = carouselRef.current.getBoundingClientRect();
       mousePos.current = {
@@ -168,6 +179,8 @@ export default function MediaCarousel({
   };
 
   const handleWheel = (e: React.WheelEvent) => {
+    if (isPreviewOpen) return;
+
     const horizontalIntent = Math.abs(e.deltaX) > Math.abs(e.deltaY);
     if (!horizontalIntent) return;
 
@@ -198,6 +211,10 @@ export default function MediaCarousel({
   };
 
   const handleTouchStart = (e: React.TouchEvent) => {
+    if (isPreviewOpen) {
+      return;
+    }
+
     const touch = e.touches[0];
     touchDragStartXRef.current = touch.clientX;
     touchDragLastXRef.current = touch.clientX;
@@ -210,6 +227,10 @@ export default function MediaCarousel({
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
+    if (isPreviewOpen) {
+      return;
+    }
+
     const touch = e.touches[0];
     const lastX = touchDragLastXRef.current;
     const startX = touchDragStartXRef.current;
@@ -235,6 +256,10 @@ export default function MediaCarousel({
   };
 
   const handleTouchEnd = () => {
+    if (isPreviewOpen) {
+      return;
+    }
+
     touchDragStartXRef.current = null;
     touchDragLastXRef.current = null;
     isWheelScrollingRef.current = false;
@@ -265,7 +290,8 @@ export default function MediaCarousel({
         background: "#000",
         cursor: "crosshair",
         position: "relative",
-        touchAction: "pan-y",
+        touchAction: isPreviewOpen ? "none" : "pan-y",
+        pointerEvents: isPreviewOpen ? "none" : "auto",
       }}
     >
       <Box
