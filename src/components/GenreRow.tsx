@@ -1,15 +1,18 @@
+"use client";
+
 import {
   Box,
-  Typography,
   Card,
   CardActionArea,
   CardMedia,
   CardContent,
   Chip,
+  Typography,
 } from "@mui/material";
-import Link from "next/link";
+import { useState } from "react";
 import type { MovieSummary, TVSummary } from "@/types/media";
 import HorizontalScroller from "@/components/HorizontalScroller";
+import MediaPreviewModal from "@/components/MediaPreviewModal";
 
 type MediaItem = (MovieSummary | TVSummary) & { _type: "movie" | "tv" };
 
@@ -48,6 +51,8 @@ interface Props {
 }
 
 export default function GenreRow({ genre, items }: Props) {
+  const [selectedItem, setSelectedItem] = useState<MediaItem | null>(null);
+
   return (
     <Box>
       <Typography
@@ -71,8 +76,7 @@ export default function GenreRow({ genre, items }: Props) {
               sx={{ minWidth: 140, maxWidth: 140, flexShrink: 0 }}
             >
               <CardActionArea
-                component={Link}
-                href={`/media/${item._type}/${item.id}`}
+                onClick={() => setSelectedItem(item)}
                 sx={{
                   height: "100%",
                   display: "flex",
@@ -127,6 +131,12 @@ export default function GenreRow({ genre, items }: Props) {
           );
         })}
       </HorizontalScroller>
+
+      <MediaPreviewModal
+        mediaId={selectedItem?.id ?? null}
+        mediaType={selectedItem?._type ?? "movie"}
+        onClose={() => setSelectedItem(null)}
+      />
     </Box>
   );
 }
