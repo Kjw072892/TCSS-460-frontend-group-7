@@ -176,8 +176,19 @@ export default async function MediaDetailPage({ params }: PageProps) {
               </Box>
 
               {/* Community rating */}
+              <Typography
+                variant="overline"
+                sx={{
+                  display: "block",
+                  mt: 2.5,
+                  color: "text.secondary",
+                  letterSpacing: 1,
+                }}
+              >
+                Member ratings
+              </Typography>
               <Box
-                sx={{ display: "flex", alignItems: "center", gap: 1, mt: 2 }}
+                sx={{ display: "flex", alignItems: "center", gap: 1, mt: 0.25 }}
               >
                 <StarIcon sx={{ color: "primary.main" }} />
                 <Typography fontWeight="bold" fontSize="1.1rem">
