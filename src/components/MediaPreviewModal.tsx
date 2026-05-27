@@ -193,7 +193,7 @@ export default function MediaPreviewModal({
                       label={
                         communityRating == null
                           ? "Members No Rating"
-                          : `Members ${communityRating.toFixed(2)}/10`
+                          : `Members ${(communityRating / 2).toFixed(1)}/5`
                       }
                       color="secondary"
                       size="small"

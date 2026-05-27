@@ -435,7 +435,7 @@ export default async function MediaDetailPage({ params }: PageProps) {
                 <StarIcon sx={{ color: "primary.main" }} />
                 <Typography fontWeight="bold" fontSize="1.1rem">
                   {ratingsAverage != null
-                    ? ratingsAverage.toFixed(1)
+                    ? `${(ratingsAverage / 2).toFixed(1)}/5`
                     : "No ratings yet"}
                 </Typography>
                 {ratingsCount > 0 && (
