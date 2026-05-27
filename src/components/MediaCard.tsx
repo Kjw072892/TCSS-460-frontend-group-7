@@ -3,24 +3,76 @@ import {
   CardActionArea,
   CardContent,
   CardMedia,
-  Chip,
   Box,
+  Chip,
   Typography,
 } from "@mui/material";
 import Link from "next/link";
 import type { MovieSummary, TVSummary } from "@/types/media";
+import { getGenreNameById } from "@/lib/media-filters";
 
 type Props =
-  | { type: "movie"; item: MovieSummary }
-  | { type: "tv"; item: TVSummary };
+  | {
+      type: "movie";
+      item: MovieSummary;
+      prioritizedGenreId?: string;
+      seasonCount?: number | null;
+    }
+  | {
+      type: "tv";
+      item: TVSummary;
+      prioritizedGenreId?: string;
+      seasonCount?: number | null;
+    };
 
-export default function MediaCard({ type, item }: Props) {
+export default function MediaCard({
+  type,
+  item,
+  prioritizedGenreId,
+  seasonCount,
+}: Props) {
+  const fallbackPoster =
+    type === "movie" ? "/movie-placeholder.svg" : "/tv-placeholder.svg";
   const year =
     type === "movie"
       ? ((item as MovieSummary).releaseYear?.toString() ?? null)
       : ((item as TVSummary).firstAirDate?.slice(0, 4) ?? null);
+  const meta = [
+    year,
+    type === "tv" && seasonCount
+      ? `${seasonCount} season${seasonCount === 1 ? "" : "s"}`
+      : null,
+  ]
+    .filter(Boolean)
+    .join(" • ");
 
   const href = `/media/${type}/${item.id}`;
+  const visibleGenres = (() => {
+    const normalizedGenres = (item.genres ?? [])
+      .map((genre) => ({
+        ...genre,
+        name: genre.name || getGenreNameById(genre.id),
+      }))
+      .filter((genre) => Boolean(genre.name));
+
+    if (!prioritizedGenreId?.trim()) {
+      return normalizedGenres.slice(0, 2);
+    }
+
+    const prioritizedGenre = normalizedGenres.find(
+      (genre) => String(genre.id) === prioritizedGenreId.trim(),
+    );
+
+    if (!prioritizedGenre) {
+      return normalizedGenres.slice(0, 2);
+    }
+
+    const remainingGenres = normalizedGenres.filter(
+      (genre) => genre.id !== prioritizedGenre.id,
+    );
+
+    return [prioritizedGenre, ...remainingGenres].slice(0, 2);
+  })();
 
   return (
     <Card sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
@@ -37,23 +89,9 @@ export default function MediaCard({ type, item }: Props) {
         <Box sx={{ position: "relative" }}>
           <CardMedia
             component="img"
-            image={item.posterUrl ?? "/poster-placeholder.png"}
+            image={item.posterUrl ?? fallbackPoster}
             alt={item.title}
             sx={{ aspectRatio: "2/3", objectFit: "cover" }}
-          />
-          <Chip
-            label={type === "movie" ? "Movie" : "TV"}
-            size="small"
-            sx={{
-              position: "absolute",
-              top: 6,
-              left: 6,
-              bgcolor: "primary.main",
-              color: "primary.contrastText",
-              fontWeight: "bold",
-              fontSize: "0.6rem",
-              height: 18,
-            }}
           />
         </Box>
         <CardContent sx={{ flexGrow: 1 }}>
@@ -70,21 +108,21 @@ export default function MediaCard({ type, item }: Props) {
           >
             {item.title}
           </Typography>
-          {year && (
+          {meta && (
             <Typography
               variant="caption"
               color="text.secondary"
               display="block"
               gutterBottom
             >
-              {year}
+              {meta}
             </Typography>
           )}
           <Box sx={{ mb: 1 }}>
-            {item.genres?.slice(0, 2).map((g) => (
+            {visibleGenres.map((genre) => (
               <Chip
-                key={g.id}
-                label={g.name}
+                key={genre.id}
+                label={genre.name}
                 size="small"
                 sx={{ mr: 0.5, mb: 0.5, fontSize: "0.65rem" }}
               />

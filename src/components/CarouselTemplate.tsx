@@ -477,7 +477,9 @@ export default function MediaCarousel({
                 <Image
                   src={
                     item.posterUrl ||
-                    "https://via.placeholder.com/200x300?text=No+Poster"
+                    (mediaType === "movie"
+                      ? "/movie-placeholder.svg"
+                      : "/tv-placeholder.svg")
                   }
                   alt={item.title}
                   fill

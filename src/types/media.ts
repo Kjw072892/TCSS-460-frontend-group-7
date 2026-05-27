@@ -112,3 +112,36 @@ export interface PagedResponse<T> {
   totalPages: number;
   totalResults: number;
 }
+
+export interface RatingAuthor {
+  id?: string;
+  username?: string;
+}
+
+export interface RatingRecord {
+  id: number;
+  tmdbId: number;
+  mediaType: MediaType;
+  score: number;
+  userId: number;
+  author?: RatingAuthor;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface RatingListResponse {
+  tmdbId: number;
+  mediaType: MediaType;
+  averageScore: number;
+  totalRatings: number;
+  page: number;
+  totalPages: number;
+  results: RatingRecord[];
+}
+
+export interface MyRatingListResponse {
+  totalRatings: number;
+  page: number;
+  totalPages: number;
+  results: RatingRecord[];
+}

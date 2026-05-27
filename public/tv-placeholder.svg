@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 300" role="img" aria-labelledby="title desc">
+  <title id="title">TV poster placeholder</title>
+  <desc id="desc">Fallback artwork for TV shows when no poster is available.</desc>
+  <defs>
+    <linearGradient id="tvBg" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0%" stop-color="#11161b" />
+      <stop offset="100%" stop-color="#243746" />
+    </linearGradient>
+  </defs>
+  <rect width="200" height="300" rx="14" fill="url(#tvBg)" />
+  <rect x="18" y="18" width="164" height="264" rx="12" fill="none" stroke="#4f687a" stroke-width="2" />
+  <rect x="46" y="76" width="108" height="86" rx="10" fill="none" stroke="#7fd1ff" stroke-width="8" />
+  <line x1="72" y1="60" x2="92" y2="78" stroke="#7fd1ff" stroke-width="6" stroke-linecap="round" />
+  <line x1="128" y1="60" x2="108" y2="78" stroke="#7fd1ff" stroke-width="6" stroke-linecap="round" />
+  <rect x="68" y="176" width="64" height="10" rx="5" fill="#7fd1ff" />
+  <rect x="60" y="192" width="80" height="8" rx="4" fill="#7b8d99" />
+  <text x="100" y="228" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="700" fill="#eef8ff">
+    No TV Poster
+  </text>
+</svg>

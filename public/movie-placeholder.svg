@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 300" role="img" aria-labelledby="title desc">
+  <title id="title">Movie poster placeholder</title>
+  <desc id="desc">Fallback artwork for movies when no poster is available.</desc>
+  <defs>
+    <linearGradient id="movieBg" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0%" stop-color="#121212" />
+      <stop offset="100%" stop-color="#2b2b2b" />
+    </linearGradient>
+  </defs>
+  <rect width="200" height="300" rx="14" fill="url(#movieBg)" />
+  <rect x="18" y="18" width="164" height="264" rx="12" fill="none" stroke="#505050" stroke-width="2" />
+  <circle cx="100" cy="120" r="42" fill="none" stroke="#f5c518" stroke-width="10" />
+  <circle cx="100" cy="120" r="6" fill="#f5c518" />
+  <circle cx="84" cy="103" r="5" fill="#f5c518" />
+  <circle cx="117" cy="104" r="5" fill="#f5c518" />
+  <circle cx="84" cy="137" r="5" fill="#f5c518" />
+  <circle cx="117" cy="136" r="5" fill="#f5c518" />
+  <rect x="58" y="184" width="84" height="12" rx="6" fill="#8a8a8a" />
+  <text x="100" y="224" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" font-weight="700" fill="#f3f3f3">
+    No Movie Poster
+  </text>
+</svg>

@@ -19,7 +19,7 @@ import PersonIcon from "@mui/icons-material/Person";
 
 import { MovieDetail, TVShowDetail } from "@/types/backendObjects";
 import { getMovieById, getTVShowById } from "@/lib/fetchAPI";
-import { enrichedMovie, enrichedTV } from "@/lib/media-api";
+import { getTitleRatings } from "@/lib/media-api";
 
 interface MediaPreviewModalProps {
   mediaId: number | null;
@@ -51,18 +51,16 @@ export default function MediaPreviewModal({
     async function loadDetail() {
       setLoadingDetail(true);
       try {
-        const [result, enrichedResult] = await Promise.all([
+        const [result, ratings] = await Promise.all([
           mediaType === "movie"
             ? getMovieById(resolvedMediaId)
             : getTVShowById(resolvedMediaId),
-          mediaType === "movie"
-            ? enrichedMovie(resolvedMediaId)
-            : enrichedTV(resolvedMediaId),
+          getTitleRatings(resolvedMediaId, mediaType),
         ]);
 
         if (!cancelled) {
           setDetail(result);
-          setCommunityRating(enrichedResult.community.averageRating);
+          setCommunityRating(ratings.totalRatings > 0 ? ratings.averageScore : null);
         }
       } catch (err) {
         if (!cancelled) {

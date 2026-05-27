@@ -20,6 +20,7 @@ import { getMovieById, getTVShowById } from "@/lib/fetchAPI";
 import {
   enrichedMovie,
   enrichedTV,
+  getTitleRatings,
   popularMoviesMultiPage,
   popularTVMultiPage,
   searchMovies,
@@ -74,24 +75,32 @@ export default async function MediaDetailPage({ params }: PageProps) {
 
   let tmdb: MovieDetail | TVDetail;
   let community: Community;
+  let ratingsAverage: number | null = null;
+  let ratingsCount = 0;
   let tmdbRating: number | null = null;
 
   try {
     if (type === "movie") {
-      const [data, rawDetail] = await Promise.all([
+      const [data, rawDetail, ratings] = await Promise.all([
         enrichedMovie(id),
         getMovieById(Number(id)),
+        getTitleRatings(id, "movie"),
       ]);
       tmdb = data.tmdb;
       community = data.community;
+      ratingsAverage = ratings.totalRatings > 0 ? ratings.averageScore : null;
+      ratingsCount = ratings.totalRatings;
       tmdbRating = (rawDetail as RawMovieDetail).rating;
     } else {
-      const [data, rawDetail] = await Promise.all([
+      const [data, rawDetail, ratings] = await Promise.all([
         enrichedTV(id),
         getTVShowById(Number(id)),
+        getTitleRatings(id, "tv"),
       ]);
       tmdb = data.tmdb;
       community = data.community;
+      ratingsAverage = ratings.totalRatings > 0 ? ratings.averageScore : null;
+      ratingsCount = ratings.totalRatings;
       tmdbRating = (rawDetail as RawTVShowDetail).rating;
     }
   } catch (e) {
@@ -335,7 +344,12 @@ export default async function MediaDetailPage({ params }: PageProps) {
             {/* Poster */}
             <Box
               component="img"
-              src={tmdb.posterUrl ?? "/poster-placeholder.png"}
+              src={
+                tmdb.posterUrl ??
+                (type === "movie"
+                  ? "/movie-placeholder.svg"
+                  : "/tv-placeholder.svg")
+              }
               alt={tmdb.title}
               sx={{
                 width: { xs: 140, md: 200 },
@@ -420,20 +434,20 @@ export default async function MediaDetailPage({ params }: PageProps) {
               >
                 <StarIcon sx={{ color: "primary.main" }} />
                 <Typography fontWeight="bold" fontSize="1.1rem">
-                  {community.averageRating != null
-                    ? community.averageRating.toFixed(1)
+                  {ratingsAverage != null
+                    ? ratingsAverage.toFixed(1)
                     : "No ratings yet"}
                 </Typography>
-                {community.reviewCount > 0 && (
+                {ratingsCount > 0 && (
                   <Typography variant="body2" color="text.secondary">
-                    ({community.reviewCount} review
-                    {community.reviewCount !== 1 ? "s" : ""})
+                    ({ratingsCount} rating
+                    {ratingsCount !== 1 ? "s" : ""})
                   </Typography>
                 )}
               </Box>
 
               {user ? (
-                <UserRatingStars />
+                <UserRatingStars tmdbId={Number(id)} mediaType={type} />
               ) : (
                 <Box
                   sx={{

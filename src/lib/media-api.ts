@@ -5,6 +5,8 @@ import type {
   PagedResponse,
   EnrichedMovie,
   EnrichedTV,
+  MediaType,
+  RatingListResponse,
 } from "@/types/media";
 
 interface SearchOptions {
@@ -83,4 +85,16 @@ export function enrichedMovie(id: string | number): Promise<EnrichedMovie> {
 
 export function enrichedTV(id: string | number): Promise<EnrichedTV> {
   return apiGet<EnrichedTV>(`/v1/media/tv/${id}/enriched`);
+}
+
+export function getTitleRatings(
+  tmdbId: string | number,
+  mediaType: MediaType,
+  page = 1,
+): Promise<RatingListResponse> {
+  const params = new URLSearchParams({
+    mediaType,
+    page: String(page),
+  });
+  return apiGet<RatingListResponse>(`/v1/ratings/${tmdbId}?${params}`);
 }

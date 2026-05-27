@@ -59,7 +59,12 @@ export default function GenreRow({ genre, items }: Props) {
                 <Box sx={{ position: "relative" }}>
                   <CardMedia
                     component="img"
-                    image={item.posterUrl ?? "/poster-placeholder.png"}
+                    image={
+                      item.posterUrl ??
+                      (item._type === "movie"
+                        ? "/movie-placeholder.svg"
+                        : "/tv-placeholder.svg")
+                    }
                     alt={item.title}
                     sx={{ aspectRatio: "2/3", objectFit: "cover" }}
                   />
