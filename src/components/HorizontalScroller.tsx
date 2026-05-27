@@ -107,6 +107,7 @@ export default function HorizontalScroller({
         aria-label="Scroll left"
         onClick={() => scrollByAmount("left")}
         sx={{
+          display: { xs: "none", md: "flex" },
           position: "absolute",
           left: 0,
           top: 0,
@@ -132,7 +133,7 @@ export default function HorizontalScroller({
           gap: 1.5,
           overflowX: "auto",
           pb: 1,
-          px: { xs: 4.5, sm: 5.5 },
+          px: { xs: 0, md: 5.5 },
           cursor: "grab",
           scrollbarWidth: "none",
           msOverflowStyle: "none",
@@ -162,6 +163,7 @@ export default function HorizontalScroller({
         aria-label="Scroll right"
         onClick={() => scrollByAmount("right")}
         sx={{
+          display: { xs: "none", md: "flex" },
           position: "absolute",
           right: 0,
           top: 0,
