@@ -133,8 +133,7 @@ export default function SearchForm({
       }}
     >
       <TextField
-        placeholder="Search"
-        helperText="Search by title or cast member."
+        placeholder="Search by title or cast member"
         value={q}
         onChange={(e) => setQ(e.target.value)}
         variant="outlined"
